@@ -72,7 +72,7 @@ namespace SoG_Savegame_Editor
             PopulateFields();
         }
 
-        //TODO: Check out if there is a way to show the items in the designer 
+        //TODO: Check out if there is a way to show the items in the designer
         private void InitElements() //  Designer Items
         {
             int iQuickslotYpos = 262;
@@ -139,6 +139,17 @@ namespace SoG_Savegame_Editor
             cbShoes.DataSource = FilterItems(items, "Shoes_");
             cbAccessory1.DataSource = FilterItems(items, "Accessory_");
             cbAccessory2.DataSource = FilterItems(items, "Accessory_");
+
+            // Add event handlers to mark items as seen when equipped
+            cbHat.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+            cbFacegear.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+            cbWeapon.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+            cbShield.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+            cbArmor.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+            cbShoes.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+            cbAccessory1.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+            cbAccessory2.SelectedIndexChanged += EquipmentComboBox_SelectedIndexChanged;
+
             cbStyleHat.DataSource = FilterItems(items, "Hat_");
 
             cbStyleFacegear.DataSource = FilterItems(items, "Facegear_");
@@ -332,7 +343,7 @@ namespace SoG_Savegame_Editor
                     item.Plusses,
                     item.Position
                 );
-            }            
+            }
 
             // KilledEnemies
             for (int i = 0; i != playerObject.KilledEnemiesCount; i++)
@@ -348,7 +359,7 @@ namespace SoG_Savegame_Editor
                 lstEnemiesKilled.Items.Add(vKilledEnemy);
             }
 
-            numGold.Value = playerObject.Cash;       
+            numGold.Value = playerObject.Cash;
 
             numLevel.Value = playerObject.Level;
             numEXPcurrent.Value = playerObject.ExpCurrent;
@@ -483,6 +494,40 @@ namespace SoG_Savegame_Editor
         private void GetDataFromFields()
         {
             playerObject.Nickname = txtNickname.Text;
+
+            // Update equipped items from combo boxes
+            if (!string.IsNullOrEmpty(cbHat.Text) && cbHat.Text != "Null")
+            {
+                playerObject.Equip.Hat = (SogItem)System.Enum.Parse(typeof(SogItem), cbHat.Text);
+            }
+            if (!string.IsNullOrEmpty(cbFacegear.Text) && cbFacegear.Text != "Null")
+            {
+                playerObject.Equip.Facegear = (SogItem)System.Enum.Parse(typeof(SogItem), cbFacegear.Text);
+            }
+            if (!string.IsNullOrEmpty(cbWeapon.Text) && cbWeapon.Text != "Null")
+            {
+                playerObject.Equip.Weapon = (SogItem)System.Enum.Parse(typeof(SogItem), cbWeapon.Text);
+            }
+            if (!string.IsNullOrEmpty(cbShield.Text) && cbShield.Text != "Null")
+            {
+                playerObject.Equip.Shield = (SogItem)System.Enum.Parse(typeof(SogItem), cbShield.Text);
+            }
+            if (!string.IsNullOrEmpty(cbArmor.Text) && cbArmor.Text != "Null")
+            {
+                playerObject.Equip.Armor = (SogItem)System.Enum.Parse(typeof(SogItem), cbArmor.Text);
+            }
+            if (!string.IsNullOrEmpty(cbShoes.Text) && cbShoes.Text != "Null")
+            {
+                playerObject.Equip.Shoes = (SogItem)System.Enum.Parse(typeof(SogItem), cbShoes.Text);
+            }
+            if (!string.IsNullOrEmpty(cbAccessory1.Text) && cbAccessory1.Text != "Null")
+            {
+                playerObject.Equip.Accessory1 = (SogItem)System.Enum.Parse(typeof(SogItem), cbAccessory1.Text);
+            }
+            if (!string.IsNullOrEmpty(cbAccessory2.Text) && cbAccessory2.Text != "Null")
+            {
+                playerObject.Equip.Accessory2 = (SogItem)System.Enum.Parse(typeof(SogItem), cbAccessory2.Text);
+            }
 
             // set the potion for all potions
             playerObject.Potions.Clear();
@@ -651,9 +696,9 @@ namespace SoG_Savegame_Editor
                     var cardId = (SogEnemy)System.Enum.Parse(typeof(SogEnemy), row.Cells["Card"].Value.ToString());
                     playerObject.Cards.Add(
                         new KeyValuePair<Card, ushort>(
-                            new Card { 
-                                CardID = cardId 
-                            }, 
+                            new Card {
+                                CardID = cardId
+                            },
                             (ushort)cardCount
                         )
                     );
@@ -934,7 +979,7 @@ namespace SoG_Savegame_Editor
                 sFilename = saveFileDialog1.FileName;
                 if (!File.Exists(sFilename))
                 {
-                    FileStream fileStream = File.Create(sFilename); 
+                    FileStream fileStream = File.Create(sFilename);
                     fileStream.Close();
                 }
 
@@ -1396,12 +1441,12 @@ namespace SoG_Savegame_Editor
                     cblstFlagsChecked.Items.Add(cblstFlags.Items[e.Index]);
                     cblstFlagsChecked.SetItemChecked(cblstFlagsChecked.Items.Count - 1, true);
                 }
-            } 
+            }
             else if (e.NewValue == CheckState.Unchecked)
             {
                 cblstFlagsChecked.Items.RemoveAt(cblstFlagsChecked.Items.IndexOf(cblstFlags.Items[e.Index]));
             }
-            
+
         }
 
         private void cblstFlagsChecked_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -1463,7 +1508,7 @@ namespace SoG_Savegame_Editor
                         maxPos = pos;
                     }
                 }
-            }                 
+            }
 
             int plusses = (int)numPlusses.Value;
 
@@ -1495,8 +1540,56 @@ namespace SoG_Savegame_Editor
                 item.GetItemName(),
                 item.Count,
                 item.Plusses,
-                item.Position 
+                item.Position
             );
+        }
+
+        /// <summary>
+        /// Event handler for equipment combo boxes that automatically marks items as seen when equipped
+        /// </summary>
+        private void EquipmentComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (sender is ComboBox comboBox && !string.IsNullOrEmpty(comboBox.Text) && comboBox.Text != "Null")
+            {
+                try
+                {
+                    SogItem itemId = (SogItem)System.Enum.Parse(typeof(SogItem), comboBox.Text);
+                    MarkItemAsSeen(itemId);
+                }
+                catch (ArgumentException)
+                {
+                    // Invalid item name, ignore
+                }
+            }
+        }
+
+        /// <summary>
+        /// Marks an item as seen in the ItemsSeen checklist
+        /// </summary>
+        /// <param name="itemId">The item to mark as seen</param>
+        private void MarkItemAsSeen(SogItem itemId)
+        {
+            if (playerObject == null || cblstItemsSeen == null)
+                return;
+
+            // Find the item in the checklist
+            string itemName = itemId.ToString();
+            int itemIndex = -1;
+
+            for (int i = 0; i < cblstItemsSeen.Items.Count; i++)
+            {
+                if (cblstItemsSeen.Items[i].ToString() == itemName)
+                {
+                    itemIndex = i;
+                    break;
+                }
+            }
+
+            // If found and not already checked, check it
+            if (itemIndex >= 0 && !cblstItemsSeen.GetItemChecked(itemIndex))
+            {
+                cblstItemsSeen.SetItemChecked(itemIndex, true);
+            }
         }
 
         private void btnSkinColor_Click(object sender, EventArgs e)
